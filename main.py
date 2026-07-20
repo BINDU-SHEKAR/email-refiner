@@ -1,16 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from transformers import pipeline
-import os
 
 app = FastAPI()
 
-hf_token = os.getenv("HF_TOKEN")
-
 nlp = pipeline(
     "text-generation",
-    model="gpt2",          # or "distilgpt2"
-    use_auth_token=hf_token
+    model="distilgpt2"   # lighter than gpt2, works on free tier
 )
 
 app.add_middleware(
@@ -33,6 +29,11 @@ async def polish_email(request: Request):
         f"Do not add unrelated details:\n{draft}"
     )
 
-    response = nlp(prompt, max_length=200, do_sample=True)
+    response = nlp(
+        prompt,
+        max_length=120,          # reduced length
+        do_sample=True,
+        num_return_sequences=1   # only one output
+    )
 
     return {"polished": response[0]["generated_text"]}
