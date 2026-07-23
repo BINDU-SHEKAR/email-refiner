@@ -44,10 +44,15 @@ async def polish_email(request: Request):
         f"Do not add unrelated details:\n{draft}"
     )
 
-    response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
-    result = response.json()
+    try:
+        response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
+        response.raise_for_status()  # raises error if 4xx/5xx
+        result = response.json()
 
-    if isinstance(result, list) and "generated_text" in result[0]:
-        return {"polished": result[0]["generated_text"]}
-    else:
-        return {"error": result}
+        if isinstance(result, list) and "generated_text" in result[0]:
+            return {"polished": result[0]["generated_text"]}
+        else:
+            return {"error": result}
+    except Exception as e:
+        # Always return JSON, even on error
+        return {"error": str(e)}
