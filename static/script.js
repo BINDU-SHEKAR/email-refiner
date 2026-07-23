@@ -1,23 +1,29 @@
 async function polishEmail() {
   const draft = document.getElementById("draft").value;
   const tone = document.getElementById("tone").value;
+  const output = document.getElementById("output");
 
-  document.getElementById("output").innerText = "Processing...";
+  // Show loading message
+  output.textContent = "Processing...";
 
   try {
-    const res = await fetch("/polish", {   // ✅ relative path
+    // Send request to backend
+    const response = await fetch("/polish", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ draft, tone })
     });
 
-    const data = await res.json();
+    // Parse JSON response
+    const data = await response.json();
+
+    // Display polished email or error
     if (data.polished) {
-      document.getElementById("output").innerText = data.polished;
+      output.textContent = data.polished;
     } else {
-      document.getElementById("output").innerText = "Error: " + JSON.stringify(data.error);
+      output.textContent = "Error: " + JSON.stringify(data.error);
     }
   } catch (err) {
-    document.getElementById("output").innerText = "Request failed: " + err;
+    output.textContent = "Request failed: " + err;
   }
 }
