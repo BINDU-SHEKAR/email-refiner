@@ -3,18 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Email Polisher</title>
-  <!-- Bootstrap CSS -->
-  <link 
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
-    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    #output {
-      white-space: pre-wrap;
-      min-height: 100px;
-    }
+    body { background-color: #f8f9fa; }
+    #output { white-space: pre-wrap; min-height: 100px; }
   </style>
 </head>
 <body>
@@ -23,13 +15,11 @@
       <div class="card-body">
         <h2 class="card-title text-center mb-4">✉️ Email Polisher</h2>
 
-        <!-- Draft input -->
         <div class="mb-3">
           <label for="draft" class="form-label">Draft Email</label>
           <textarea id="draft" class="form-control" rows="6" placeholder="Enter your draft email here"></textarea>
         </div>
 
-        <!-- Tone selector -->
         <div class="mb-3">
           <label for="tone" class="form-label">Tone</label>
           <select id="tone" class="form-select">
@@ -40,51 +30,16 @@
           </select>
         </div>
 
-        <!-- Button -->
         <div class="d-grid">
           <button class="btn btn-primary" onclick="polishEmail()">✨ Polish Email</button>
         </div>
 
-        <!-- Output -->
         <h4 class="mt-4">Polished Output:</h4>
-        <div class="alert alert-secondary" id="output"></div>
+        <div class="alert alert-secondary" id="output">Waiting...</div>
       </div>
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-    async function polishEmail() {
-      const draft = document.getElementById("draft").value;
-      const tone = document.getElementById("tone").value;
-      const output = document.getElementById("output");
-      output.textContent = "Processing...";
-
-      // Streaming fetch
-      const response = await fetch("http://127.0.0.1:8000/polish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft, tone })
-      });
-
-      // If backend supports streaming, use reader
-      if (response.body) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        output.textContent = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          output.textContent += decoder.decode(value, { stream: true });
-        }
-      } else {
-        // Fallback if no streaming
-        const data = await response.json();
-        output.textContent = data.polished;
-      }
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
