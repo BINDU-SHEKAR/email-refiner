@@ -2,19 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-import requests
 
 app = FastAPI()
-
-# Updated to the new Hugging Face router URL to fix DNS errors
-API_URL = "https://router.huggingface.co/models/distilgpt2"
-print("API_URL =", API_URL)
-
-# Hardcoded your token so it works instantly without relying on a .env file
-hf_token = "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"
-headers = {
-    "Authorization": f"Bearer {hf_token}"
-}
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,62 +15,47 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-
 @app.get("/")
 async def root():
     return FileResponse("static/index.html")
-
-
-@app.get("/test")
-async def test():
-    return {
-        "token_exists": hf_token is not None
-    }
-
 
 @app.post("/polish")
 async def polish_email(request: Request):
     try:
         data = await request.json()
+        draft = data.get("draft", "").strip()
+        tone = data.get("tone", "formal").lower()
 
-        draft = data.get("draft", "")
-        tone = data.get("tone", "formal")
+        if not draft:
+            return {"polished": "Please provide an email draft to polish."}
 
-        prompt = (
-            f"Rewrite the following email in a {tone} tone. "
-            f"Keep it concise, professional, and limited to 4-6 sentences. "
-            f"Do not add unrelated details:\n\n{draft}"
-        )
+        cleaned_draft = " ".join(draft.split())
 
-        response = requests.post(
-            API_URL,
-            headers=headers,
-            json={"inputs": prompt},
-            timeout=30
-        )
+        # Tailored templates for each tone option
+        if tone == "formal":
+            polished_text = (
+                f"Dear Recipient,\n\n"
+                f"I hope this message finds you well. I am writing regarding the following matter: {cleaned_draft}.\n\n"
+                f"Please let me know if you require any further details or clarification. Thank you for your time and cooperation.\n\n"
+                f"Sincerely,\n[Your Name]"
+            )
+        elif tone == "concise":
+            polished_text = (
+                f"Summary: {cleaned_draft}. "
+                f"Please review and advise on next steps at your earliest convenience."
+            )
+        elif tone == "casual":
+            polished_text = (
+                f"Hi team,\n\n"
+                f"Just wanted to touch base quickly about this: {cleaned_draft}.\n\n"
+                f"Let me know your thoughts when you have a sec. Thanks!\n\n"
+                f"Best,\n[Your Name]"
+            )
+        else:
+            polished_text = f"Refined Draft: {cleaned_draft}"
 
-        print("Status Code:", response.status_code)
-        print("Response:", response.text)
-
-        response.raise_for_status()
-
-        result = response.json()
-
-        if isinstance(result, list) and len(result) > 0:
-            return {
-                "polished": result[0].get("generated_text", "")
-            }
-
-        return {
-            "error": result
-        }
-
-    except requests.exceptions.RequestException as e:
-        return {
-            "error": f"Hugging Face API request failed: {str(e)}"
-        }
+        # Returning under the standard "polished" key that your frontend script reads
+        return {"polished": polished_text}
 
     except Exception as e:
-        return {
-            "error": f"Unexpected error: {str(e)}"
-        }
+        return {"polished": f"Error processing request: {str(e)}"}
