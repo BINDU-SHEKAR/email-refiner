@@ -11,7 +11,7 @@ API_URL = "https://router.huggingface.co/models/distilgpt2"
 print("API_URL =", API_URL)
 
 # Hardcoded your token so it works instantly without relying on a .env file
-hf_token = "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"
+hf_token = "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"
 headers = {
     "Authorization": f"Bearer {hf_token}"
 }
